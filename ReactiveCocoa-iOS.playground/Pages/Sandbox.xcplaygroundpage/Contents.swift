@@ -23,7 +23,7 @@ import UIKit
 
 func performScopedOperation(_ description: String, active: Bool = true, _ sideEffect: () throws -> ()) rethrows {
     guard active else { return }
-//    print("Executing \(description)")
+    print("Executing \(description)")
     try sideEffect()
 }
 
