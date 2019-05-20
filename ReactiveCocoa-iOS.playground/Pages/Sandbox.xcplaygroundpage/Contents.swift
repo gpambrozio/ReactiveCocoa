@@ -10,7 +10,6 @@
 1. Build `ReactiveCocoa-iOS` scheme
 1. Finally open the `ReactiveCocoa-iOS.playground`
 1. Choose `View > Show Debug Area`
-1. Choose `View > Assistant Editor > Show Assistant Editor`
 */
 
 import ReactiveCocoa
@@ -628,6 +627,8 @@ performScopedOperation("flatMapping in real life: local cache on a remote stream
 /*:
 -----------------
  ## Exercises
+
+ ### Make sure to choose `View > Assistant Editor > Show Assistant Editor` to see the UI
 -----------------
  */
 class Exercise12ViewController : UIViewController {
