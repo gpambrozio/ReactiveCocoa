@@ -774,3 +774,75 @@ performScopedOperation("Exercise 4", active: false) {
     // Put here what would go in your VC
 
 }
+
+
+class Exercise5ViewController : UIViewController {
+    var buttonToFilter: UIButton!
+    var numbersListLabel: UILabel!
+
+    override func loadView() {
+        let view = UIView()
+        view.backgroundColor = .white
+
+        buttonToFilter = UIButton(type: .system)
+        buttonToFilter.setTitle("Filter", for: .normal)
+
+        numbersListLabel = UILabel()
+        numbersListLabel.text = "No numbers yet"
+
+        let stack = UIStackView(arrangedSubviews: [buttonToFilter, numbersListLabel])
+        stack.alignment = .fill
+        stack.distribution = .fillEqually
+        stack.axis = .vertical
+
+        view.addSubview(stack)
+
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            stack.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            ])
+        self.view = view
+    }
+}
+
+performScopedOperation("Exercise 5", active: true) {
+    /// You have a server that sends you a list of random numbers from time to time.
+    /// You need to show this list, in order and with no duplicates.
+    /// The list can be shown in the label of the VM as a comma separated list
+    /// You also have a button that, when selected, will filter out all the odd numbers.
+
+    /// Part 2: Now show the last 20 values that came from the server.
+    /// If filtering you don't have to show 20 numbers but bonus points if you do.
+
+    /// Part 3: Now only start showing only when you have at least 20 values to show.
+    /// If filtering you don't have to show 20 numbers but bonus points if you do.
+
+    let view = Exercise5ViewController()
+    PlaygroundPage.current.liveView = view
+    PlaygroundPage.current.needsIndefiniteExecution = true
+
+    let networkRequest = SignalProducer<[Int], Never> { observer, lifetime in
+        func sendRandomNumbers(to observer: Signal<[Int], Never>.Observer) {
+            let size = Int.random(in: 1...10)
+            let numbers = (1...size).map { _ in Int.random(in: 0..<10000) }
+            observer.send(value: numbers)
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2), execute: {
+                sendRandomNumbers(to: observer)
+            })
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2), execute: {
+            sendRandomNumbers(to: observer)
+        })
+    }
+
+    // Put here what would go in your VM
+
+
+
+    // Put here what would go in your VC
+
+
+}
