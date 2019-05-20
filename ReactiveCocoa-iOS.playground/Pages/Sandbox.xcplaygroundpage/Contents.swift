@@ -559,9 +559,7 @@ performScopedOperation("flatMap strategies", active: false) {
     func testFlatMap(_ strategy: ReactiveSwift.FlattenStrategy, _ description: String) {
         print("Testing strategy \(description)")
 
-        let (lifetime, token) = Lifetime.make()
         let startOfTest = Date()
-
         let flattenedProducer = outerProducer.flatMap(strategy) { outerCount in
             innerProducer.map { (outerCount, $0, Date().timeIntervalSince(startOfTest)) }
         }.collect()
