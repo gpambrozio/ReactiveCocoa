@@ -829,13 +829,13 @@ performScopedOperation("Exercise 5", active: false) {
             let size = Int.random(in: 1...10)
             let numbers = (1...size).map { _ in Int.random(in: 0..<10000) }
             observer.send(value: numbers)
-            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2), execute: {
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
                 sendRandomNumbers(to: observer)
-            })
+            }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2), execute: {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
             sendRandomNumbers(to: observer)
-        })
+        }
     }
 
     // Put here what would go in your VM
