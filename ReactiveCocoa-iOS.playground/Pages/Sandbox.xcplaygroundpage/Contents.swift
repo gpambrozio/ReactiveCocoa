@@ -665,6 +665,7 @@ performScopedOperation("Exercise 1", active: false) {
 
     let view = Exercise12ViewController()
     PlaygroundPage.current.liveView = view
+    PlaygroundPage.current.needsIndefiniteExecution = true
 
     // Put here what would go in your VC
 
@@ -678,6 +679,7 @@ performScopedOperation("Exercise 2", active: false) {
 
     let view = Exercise12ViewController()
     PlaygroundPage.current.liveView = view
+    PlaygroundPage.current.needsIndefiniteExecution = true
 
     // Put here what would go in your VC
 
@@ -731,6 +733,7 @@ performScopedOperation("Exercise 3", active: false) {
 
     let view = Exercise34ViewController()
     PlaygroundPage.current.liveView = view
+    PlaygroundPage.current.needsIndefiniteExecution = true
 
     // Put here what would go in your VC
 
@@ -744,6 +747,7 @@ performScopedOperation("Exercise 4", active: false) {
 
     let view = Exercise34ViewController()
     PlaygroundPage.current.liveView = view
+    PlaygroundPage.current.needsIndefiniteExecution = true
 
     // Put here what would go in your VC
 
