@@ -808,7 +808,7 @@ class Exercise5ViewController : UIViewController {
     }
 }
 
-performScopedOperation("Exercise 5", active: true) {
+performScopedOperation("Exercise 5", active: false) {
     /// You have a server that sends you a list of random numbers from time to time.
     /// You need to show this list, in order and with no duplicates.
     /// The list can be shown in the label of the VM as a comma separated list
