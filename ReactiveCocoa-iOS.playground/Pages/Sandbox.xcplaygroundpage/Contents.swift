@@ -772,7 +772,7 @@ performScopedOperation("Exercise 4", active: false) {
     /// Part 2: When the user selects "Maybe", the app should do a network
     /// request to a server (simulated by the Producer below) asking for a
     /// Yes or No value. Upon reply from the server, select the appropriate
-    /// selector. All selectors must be disabled while the request is pending.
+    /// selector. All buttons must be disabled while the request is pending.
     /// Also make sure ther user gets feedback if we get a network error
     struct NetworkError: Error {}
     let networkRequest = SignalProducer<Bool, NetworkError> { observer, lifetime in
@@ -833,7 +833,7 @@ performScopedOperation("Exercise 5", active: false) {
     /// Part 2: Now show the last 20 values that came from the server.
     /// If filtering you don't have to show 20 numbers but bonus points if you do.
 
-    /// Part 3: Now only start showing only when you have at least 20 values to show.
+    /// Part 3: Now start showing only when you have at least 20 values to show.
     /// If filtering you don't have to show 20 numbers but bonus points if you do.
 
     let view = Exercise5ViewController()
