@@ -10,6 +10,7 @@
 1. Build `ReactiveCocoa-iOS` scheme
 1. Finally open the `ReactiveCocoa-iOS.playground`
 1. Choose `View > Show Debug Area`
+1. Choose `View > Assistant Editor > Show Assistant Editor`
 */
 
 import ReactiveCocoa
