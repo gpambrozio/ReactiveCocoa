@@ -248,8 +248,10 @@ performScopedOperation("Starting a producer twice and really being ok with it", 
     }
     let authenticationProducer = SignalProducer<Bool, Never> { observer, lifetime in
         let producer = authenticateAction.apply(()).flatMapError { _ in SignalProducer(value: false) }
+        print("Will start producer")
         lifetime += producer.start(observer)
     }
+    .on(terminated: { print("terminated") })
     .replayLazily(upTo: Int.max)
 
     authenticationProducer
@@ -262,6 +264,20 @@ performScopedOperation("Starting a producer twice and really being ok with it", 
         .startWithValues {
             print("Original value: \($0)")
         }
+
+    RunLoop.current.run(until: Date(timeIntervalSinceNow: 3))
+
+    authenticationProducer
+        .map { "Mapped value: \($0)" }
+        .startWithValues {
+            print("Mapped Value2: \($0)")
+    }
+
+    authenticationProducer
+        .startWithValues {
+            print("Original value2: \($0)")
+    }
+
 }
 
 /*:
