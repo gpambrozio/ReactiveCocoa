@@ -670,6 +670,16 @@ class Exercise12ViewController : UIViewController {
     }
 }
 
+enum State: String, CaseIterable {
+    case yes, no, maybe
+    func next() -> State {
+        guard let i = State.allCases.firstIndex(of: self) else {
+            return .yes
+        }
+        return State.allCases[(i + 1) % State.allCases.count]
+    }
+}
+
 performScopedOperation("Exercise 1", active: false) {
     /// You have a state that has 3 possible values: Yes, No and Maybe
     /// Your UI has a button whose title reflects the current state
@@ -678,13 +688,24 @@ performScopedOperation("Exercise 1", active: false) {
 
     // Put here what would go in your VM
 
+    let state = MutableProperty(State.yes)
+    let out_action = Action<Void, State, Never>(state: state, execute: { state, Void -> SignalProducer<State, Never> in
+        return SignalProducer(value: state.next())
+    })
+    state <~ out_action.values
+
+    let out_stateDescription = state.map { $0.rawValue }
 
     let view = Exercise12ViewController()
     PlaygroundPage.current.liveView = view
     PlaygroundPage.current.needsIndefiniteExecution = true
 
     // Put here what would go in your VC
+    view.button.reactive.title <~ out_stateDescription
+    view.button.reactive.pressed = CocoaAction(out_action)
 
+    // Stop here forever
+    RunLoop.current.run(until: .distantFuture)
 }
 
 performScopedOperation("Exercise 2", active: false) {
@@ -692,13 +713,25 @@ performScopedOperation("Exercise 2", active: false) {
 
     // Put here what would go in your VM
 
+    let out_action = Action<Void, Never, Never> { Void -> SignalProducer<Never, Never> in
+        SignalProducer.empty
+    }
+    let state = out_action.completed.scanToProperty(initialValue: State.yes) { value, Void in
+        value = value.next()
+    }
+
+    let out_stateDescription = state.map { $0.rawValue }
 
     let view = Exercise12ViewController()
     PlaygroundPage.current.liveView = view
     PlaygroundPage.current.needsIndefiniteExecution = true
 
     // Put here what would go in your VC
+    view.button.reactive.title <~ out_stateDescription
+    view.button.reactive.pressed = CocoaAction(out_action)
 
+    // Stop here forever
+    RunLoop.current.run(until: .distantFuture)
 }
 
 class Exercise34ViewController : UIViewController {
@@ -745,30 +778,68 @@ performScopedOperation("Exercise 3", active: false) {
     /// Do it using a MutableProperty for the state
 
     // Put here what would go in your VM
+    let state = MutableProperty(State.yes)
+    let out_action = Action<State, State, Never> { state in
+        return SignalProducer(value: state)
+    }
+    state <~ out_action.values
 
+    let out_yesSelected = state.map { $0 == .yes }
+    let out_noSelected = state.map { $0 == .no }
+    let out_maybeSelected = state.map { $0 == .maybe }
 
     let view = Exercise34ViewController()
     PlaygroundPage.current.liveView = view
     PlaygroundPage.current.needsIndefiniteExecution = true
 
     // Put here what would go in your VC
+    view.buttonYes.reactive.pressed = CocoaAction(out_action, input: .yes)
+    view.buttonNo.reactive.pressed = CocoaAction(out_action, input: .no)
+    view.buttonMaybe.reactive.pressed = CocoaAction(out_action, input: .maybe)
 
+    view.buttonYes.reactive.isSelected <~ out_yesSelected
+    view.buttonNo.reactive.isSelected <~ out_noSelected
+    view.buttonMaybe.reactive.isSelected <~ out_maybeSelected
+
+    // Stop here forever
+    RunLoop.current.run(until: .distantFuture)
 }
 
 performScopedOperation("Exercise 4", active: false) {
     /// Same as exercise 3 but using a Property for the state
 
     // Put here what would go in your VM
+    let out_action = Action<State, State, Never> { state in
+        return SignalProducer(value: state)
+    }
+    let state = Property(initial: .yes, then: out_action.values)
 
+    let out_yesSelected = state.map { $0 == .yes }
+    let out_noSelected = state.map { $0 == .no }
+    let out_maybeSelected = state.map { $0 == .maybe }
 
     let view = Exercise34ViewController()
     PlaygroundPage.current.liveView = view
     PlaygroundPage.current.needsIndefiniteExecution = true
 
     // Put here what would go in your VC
+    view.buttonYes.reactive.pressed = CocoaAction(out_action, input: .yes)
+    view.buttonNo.reactive.pressed = CocoaAction(out_action, input: .no)
+    view.buttonMaybe.reactive.pressed = CocoaAction(out_action, input: .maybe)
+
+    view.buttonYes.reactive.isSelected <~ out_yesSelected
+    view.buttonNo.reactive.isSelected <~ out_noSelected
+    view.buttonMaybe.reactive.isSelected <~ out_maybeSelected
+
+    // Stop here forever
+    RunLoop.current.run(until: .distantFuture)
+}
 
 
+performScopedOperation("Exercise 4 - part 2", active: false) {
+    /// Same as exercise 3 but using a Property for the state
 
+    // Put here what would go in your VM
     /// Part 2: When the user selects "Maybe", the app should do a network
     /// request to a server (simulated by the Producer below) asking for a
     /// Yes or No value. Upon reply from the server, select the appropriate
@@ -784,11 +855,54 @@ performScopedOperation("Exercise 4", active: false) {
         observer.sendCompleted()
     }.delay(3, on: QueueScheduler())
 
-    // Put here what would go in your VM
+    let state = MutableProperty<State?>(.yes)
 
+    // Put here what would go in your VM
+    let out_action = Action<State, State?, NetworkError>(state: state) { state, actionValue -> SignalProducer<State?, NetworkError> in
+        switch actionValue {
+        case .yes: return SignalProducer(value: .yes)
+        case .no: return SignalProducer(value: .no)
+        case .maybe:
+            return SignalProducer<State?, NetworkError> { observer, lifetime in
+                observer.send(value: nil)
+                let innerProducer = networkRequest
+                    .on(failed: { error in
+                        // Restore previous state then report error
+                        observer.send(value: state)
+                        observer.send(error: error)
+                    })
+                    .on(value: { value in
+                        observer.send(value: value ? .yes : .no)
+                        observer.sendCompleted()
+                    })
+                lifetime += innerProducer.start()
+            }
+        }
+    }
+    state <~ out_action.values
+
+    let out_yesSelected = state.map { $0 == .yes }
+    let out_noSelected = state.map { $0 == .no }
+    let out_maybeSelected = state.map { $0 == .maybe }
+    let out_errorLabel = Property(initial: nil, then: Signal.merge(out_action.errors.map { "\($0)" }, out_action.values.map { _ in nil }))
+
+    let view = Exercise34ViewController()
+    PlaygroundPage.current.liveView = view
+    PlaygroundPage.current.needsIndefiniteExecution = true
 
     // Put here what would go in your VC
+    view.buttonYes.reactive.pressed = CocoaAction(out_action, input: .yes)
+    view.buttonNo.reactive.pressed = CocoaAction(out_action, input: .no)
+    view.buttonMaybe.reactive.pressed = CocoaAction(out_action, input: .maybe)
 
+    view.buttonYes.reactive.isSelected <~ out_yesSelected
+    view.buttonNo.reactive.isSelected <~ out_noSelected
+    view.buttonMaybe.reactive.isSelected <~ out_maybeSelected
+
+    view.errorLabel.reactive.text <~ out_errorLabel
+
+    // Stop here forever
+    RunLoop.current.run(until: .distantFuture)
 }
 
 
@@ -804,6 +918,7 @@ class Exercise5ViewController : UIViewController {
         buttonToFilter.setTitle("Filter", for: .normal)
 
         numbersListLabel = UILabel()
+        numbersListLabel.numberOfLines = 0
         numbersListLabel.text = "No numbers yet"
 
         let stack = UIStackView(arrangedSubviews: [buttonToFilter, numbersListLabel])
@@ -843,7 +958,7 @@ performScopedOperation("Exercise 5", active: false) {
     let networkRequest = SignalProducer<[Int], Never> { observer, lifetime in
         func sendRandomNumbers(to observer: Signal<[Int], Never>.Observer) {
             let size = Int.random(in: 1...10)
-            let numbers = (1...size).map { _ in Int.random(in: 0..<10000) }
+            let numbers = (1...size).map { _ in Int.random(in: 0..<100) }
             observer.send(value: numbers)
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
                 sendRandomNumbers(to: observer)
@@ -855,10 +970,29 @@ performScopedOperation("Exercise 5", active: false) {
     }
 
     // Put here what would go in your VM
+    let out_filterAction = Action<Void, Never, Never> { SignalProducer.empty }
+    let out_isFiltering = out_filterAction.completed.scanToProperty(initialValue: false) { previous, Void in
+        previous = !previous
+    }
 
+    let values = networkRequest.scan([Int](), +)
 
+    let filteredIfAppropriate = SignalProducer.combineLatest(out_isFiltering.producer, values).map { filtering, values in
+        filtering ? values.filter { $0 % 2 == 0 } : values
+    }
+
+    let onlyWhen20 = filteredIfAppropriate.skip(while: { $0.count < 20 })
+    let last20 = onlyWhen20.map { $0.suffix(20) }
+    let unique = last20.map { Set($0) }
+    let ordered = unique.map { $0.sorted() }
+
+    let out_values = ordered.map { $0.map { "\($0)" }.joined(separator: ", ") }
 
     // Put here what would go in your VC
+    view.numbersListLabel.reactive.text <~ out_values
+    view.buttonToFilter.reactive.pressed = CocoaAction(out_filterAction)
+    view.buttonToFilter.reactive.isSelected <~ out_isFiltering
 
-
+    // Stop here forever
+    RunLoop.current.run(until: .distantFuture)
 }
